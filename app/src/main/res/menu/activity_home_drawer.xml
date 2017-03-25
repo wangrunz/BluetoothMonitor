@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+        <item
+            android:id="@+id/nav_home"
+            android:icon="@drawable/ic_bluetooth_black_24dp"
+            android:title="@string/menu_dashboard"/>
+
+    <item android:title="Communicate">
+        <menu>
+            <item
+                android:id="@+id/nav_send"
+                android:icon="@drawable/ic_menu_send"
+                android:title="@string/menu_send" />
+            <item
+                android:id="@+id/nav_about"
+                android:icon="@drawable/ic_error_outline_black_24dp"
+                android:title="@string/menu_about_me"/>
+
+        </menu>
+    </item>
+
+</menu>
