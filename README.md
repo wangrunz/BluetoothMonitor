@@ -31,29 +31,29 @@ And based on [Bluetooth | Android Developer](https://developer.android.com/guide
 >Starting in Android 3.0 (API level 11), applications can register to receive system broadcasts of pre-defined vendor-specific AT commands sent by headsets (such as a Plantronics +XEVENT command). For example, an application could receive broadcasts that indicate a connected device's battery level and could notify the user or take other action as needed. Create a broadcast receiver for the ACTION_VENDOR_SPECIFIC_HEADSET_EVENT intent to handle vendor-specific AT commands for the headset.
 
 ##### Issue
-- Broadcast Receiver never be fired by ACTION_VENDOR_SPECIFIC_HEADSET_EVENT
+Broadcast Receiver never be fired by ACTION_VENDOR_SPECIFIC_HEADSET_EVENT
 
-    Service class:
-    ```Java
-    mMyBluetoothBackgroundReceiver = new MyBluetoothBackgroundReceiver();
-    IntentFilter intentFilter = new IntentFilter();
-    intentFilter.addAction(BluetoothHeadset.ACTION_VENDOR_SPECIFIC_HEADSET_EVENT);
-    intentFilter.addCategory(BluetoothHeadset.VENDOR_SPECIFIC_HEADSET_EVENT_COMPANY_ID_CATEGORY+'.'+BluetoothAssignedNumbers.APPLE);
-    registerReceiver(mMyBluetoothBackgroundReceiver,intentFilter);
-    ```
-    BroadcastReceiver class:
-    ```Java
-    public void onReceive(Context context, Intent intent) {
-      String action = intent.getAction();
-      Log.d(TAG,"onReceive: "+action);
-      if (action.equals(BluetoothHeadset.ACTION_VENDOR_SPECIFIC_HEADSET_EVENT)){
-        //not working
-        String command = intent.getStringExtra(BluetoothHeadset.EXTRA_VENDOR_SPECIFIC_HEADSET_EVENT_CMD);
-        int type = intent.getIntExtra(BluetoothHeadset.EXTRA_VENDOR_SPECIFIC_HEADSET_EVENT_CMD_TYPE,-1);
-        Log.d(TAG, "onReceive: "+command+" type: "+type);
-      }
-    }
-    ```
+Service class:
+```Java
+mMyBluetoothBackgroundReceiver = new MyBluetoothBackgroundReceiver();
+IntentFilter intentFilter = new IntentFilter();
+intentFilter.addAction(BluetoothHeadset.ACTION_VENDOR_SPECIFIC_HEADSET_EVENT);
+intentFilter.addCategory(BluetoothHeadset.VENDOR_SPECIFIC_HEADSET_EVENT_COMPANY_ID_CATEGORY+'.'+BluetoothAssignedNumbers.APPLE);
+registerReceiver(mMyBluetoothBackgroundReceiver,intentFilter);
+```
+BroadcastReceiver class:
+```Java
+public void onReceive(Context context, Intent intent) {
+  String action = intent.getAction();
+  Log.d(TAG,"onReceive: "+action);
+  if (action.equals(BluetoothHeadset.ACTION_VENDOR_SPECIFIC_HEADSET_EVENT)){
+    //not working
+    String command = intent.getStringExtra(BluetoothHeadset.EXTRA_VENDOR_SPECIFIC_HEADSET_EVENT_CMD);
+    int type = intent.getIntExtra(BluetoothHeadset.EXTRA_VENDOR_SPECIFIC_HEADSET_EVENT_CMD_TYPE,-1);
+    Log.d(TAG, "onReceive: "+command+" type: "+type);
+  }
+}
+```
     
 
 
