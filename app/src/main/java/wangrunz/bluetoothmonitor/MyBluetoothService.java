@@ -127,6 +127,10 @@ public class MyBluetoothService extends Service {
             }
         };
 
+        if (!mBluetoothAdapter.getProfileProxy(this, mProfileListener, BluetoothProfile.HEADSET)) {
+            Log.d(TAG, "bluetooth health profile not available");
+        }
+
     }
 
     @Override
