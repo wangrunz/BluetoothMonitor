@@ -45,6 +45,7 @@ public class HomeActivity extends AppCompatActivity
     private static int navItemIndex =0;
     private static final String TAG_HOME = "home";
     private static final String TAG_ABOUT = "about";
+    private static final String TAG_FEEDBACK = "feedback";
     public static String CURRENT_TAG = TAG_HOME;
 
     //
@@ -207,6 +208,8 @@ public class HomeActivity extends AppCompatActivity
                 return new HomeFragment();
             case TAG_ABOUT:
                 return new AboutFragment();
+            case TAG_FEEDBACK:
+                return new FeedbackFragment();
             default:
                 return new HomeFragment();
         }
@@ -274,7 +277,7 @@ public class HomeActivity extends AppCompatActivity
         if (id == R.id.nav_home){
             CURRENT_TAG = TAG_HOME;
         } else if (id == R.id.nav_send) {
-
+            CURRENT_TAG = TAG_FEEDBACK;
         } else if (id == R.id.nav_about) {
             CURRENT_TAG = TAG_ABOUT;
         }
