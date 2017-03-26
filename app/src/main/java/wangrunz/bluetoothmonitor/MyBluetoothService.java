@@ -39,32 +39,19 @@ public class MyBluetoothService extends Service {
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             //super.onConnectionStateChange(gatt, status, newState);
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Log.d("GATT", "services Connected");
                 List<BluetoothGattService> gattServices = mBluetoothGatt.getServices();
-                if (gattServices == null) {
-                    Log.d("GATT", "currently no services");
-                } else {
-                    int count = gattServices.size();
-                    Log.d("GATT", count + " services");
-                    for (BluetoothGattService gattService : gattServices) {
-                        Log.d("GATT", "Service:" + Long.toHexString(gattService.getUuid().getMostSignificantBits()).substring(0, 4));
-                    }
-                }
-                Log.d("GATT", "dodiscoverServices:" + mBluetoothGatt.discoverServices());
             }
         }
 
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             //super.onServicesDiscovered(gatt, status);
-            Log.d("GATT", "services discovered" + status);
         }
 
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicRead(gatt, characteristic, status);
             UUID uuid = characteristic.getUuid();
-            Log.d("GATT characteristic", uuid.toString());
         }
     };
 
@@ -107,7 +94,6 @@ public class MyBluetoothService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        Log.d(TAG, "service activated");
         mMyBluetoothBackgroundReceiver = new MyBluetoothBackgroundReceiver();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addCategory(BluetoothHeadset.VENDOR_SPECIFIC_HEADSET_EVENT_COMPANY_ID_CATEGORY + '.' + BluetoothAssignedNumbers.APPLE);
@@ -141,22 +127,16 @@ public class MyBluetoothService extends Service {
             }
         };
 
-
-        if (!mBluetoothAdapter.getProfileProxy(this, mProfileListener, BluetoothProfile.HEADSET)) {
-            Log.d(TAG, "bluetooth health profile not available");
-        }
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "service onstart");
         return START_NOT_STICKY;
     }
 
     @Override
     public void onDestroy() {
         unregisterReceiver(mMyBluetoothBackgroundReceiver);
-        Log.d(TAG, "service done");
         super.onDestroy();
     }
 

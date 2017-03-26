@@ -25,7 +25,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -64,18 +63,11 @@ public class HomeActivity extends AppCompatActivity
             super.onScanResult(callbackType, result);
             BluetoothDevice device = result.getDevice();
             addToRecycler(device);
-            if (device.getName() == null) {
-                Log.d("LE device", "Unknown");
-            } else {
-                Log.d("LE device", device.getName());
-            }
-            Log.d("LE address", device.getAddress());
         }
 
         @Override
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
-            Log.d("LESCANNER", "fail:" + errorCode);
         }
     };
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -336,14 +328,12 @@ public class HomeActivity extends AppCompatActivity
                 @Override
                 public void run() {
                     mBluetoothLeScanner.stopScan(mLeScanCallback);
-                    Log.d("LESCANNER", "stop");
                 }
             }, SCAN_PERIOD);
 
             mBluetoothLeScanner.startScan(mLeScanCallback);
         } else {
             mBluetoothLeScanner.stopScan(mLeScanCallback);
-            Log.d("LESCANNER", "stop");
         }
     }
 
