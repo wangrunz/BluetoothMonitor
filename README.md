@@ -3,7 +3,7 @@ This is a simple Bluetooth Monitor app which shows the status, type and MAC of n
 
 Support both Bluetooth and Bluetooth LE devices.
 
-Functions did not complete yet, any help will be pleasured.
+Functions did not complete yet.
 
 ## Need to implement
 ### Battery level for bluetooth headsets support HandsFree profile
