@@ -1,6 +1,5 @@
 package wangrunz.bluetoothmonitor;
 
-import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -69,7 +68,7 @@ public class FeedbackFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_feedback, container, false);
-        webView = (WebView)view.findViewById(R.id.feedback_web);
+        webView = (WebView) view.findViewById(R.id.feedback_web);
         webView.loadUrl(FEEDBACK_URL);
         return view;
     }

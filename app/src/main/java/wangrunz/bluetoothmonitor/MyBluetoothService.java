@@ -26,6 +26,7 @@ import java.util.UUID;
 
 public class MyBluetoothService extends Service {
     private static final String TAG = "MyBluetoothService";
+    private final IBinder mBinder = new MyServiceBinder();
     private MyBluetoothBackgroundReceiver mMyBluetoothBackgroundReceiver;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothHeadset mBluetoothHeadset;
@@ -33,78 +34,68 @@ public class MyBluetoothService extends Service {
     private BluetoothHealth mBluetoothHealth;
     private BluetoothProfile.ServiceListener mProfileListener;
     private BluetoothGatt mBluetoothGatt;
-
-    BluetoothGattCallback mGattCallback = new BluetoothGattCallback(){
+    BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             //super.onConnectionStateChange(gatt, status, newState);
-            if (newState == BluetoothProfile.STATE_CONNECTED){
-                Log.d("GATT","services Connected");
+            if (newState == BluetoothProfile.STATE_CONNECTED) {
+                Log.d("GATT", "services Connected");
                 List<BluetoothGattService> gattServices = mBluetoothGatt.getServices();
-                if (gattServices==null){
-                    Log.d("GATT","currently no services");
-                }
-                else {
+                if (gattServices == null) {
+                    Log.d("GATT", "currently no services");
+                } else {
                     int count = gattServices.size();
-                    Log.d("GATT",count+" services");
-                    for (BluetoothGattService gattService :gattServices){
-                        Log.d("GATT","Service:"+Long.toHexString(gattService.getUuid().getMostSignificantBits()).substring(0,4));
+                    Log.d("GATT", count + " services");
+                    for (BluetoothGattService gattService : gattServices) {
+                        Log.d("GATT", "Service:" + Long.toHexString(gattService.getUuid().getMostSignificantBits()).substring(0, 4));
                     }
                 }
-                Log.d("GATT","dodiscoverServices:"+mBluetoothGatt.discoverServices());
+                Log.d("GATT", "dodiscoverServices:" + mBluetoothGatt.discoverServices());
             }
         }
 
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             //super.onServicesDiscovered(gatt, status);
-            Log.d("GATT","services discovered"+status);
+            Log.d("GATT", "services discovered" + status);
         }
 
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicRead(gatt, characteristic, status);
             UUID uuid = characteristic.getUuid();
-            Log.d("GATT characteristic",uuid.toString());
+            Log.d("GATT characteristic", uuid.toString());
         }
     };
-
-    public void connectGatt(Context context,BluetoothDevice device){
-        mBluetoothGatt = device.connectGatt(context,false,mGattCallback);
-    }
-
-    public void closeGatt(){
-        if (mBluetoothGatt == null){
-            return;
-        }
-        mBluetoothGatt.close();
-        mBluetoothGatt=null;
-    }
 
     public MyBluetoothService() {
     }
 
-    public class MyServiceBinder extends Binder{
-        MyBluetoothService getService(){
-            return MyBluetoothService.this;
-        }
+    public void connectGatt(Context context, BluetoothDevice device) {
+        mBluetoothGatt = device.connectGatt(context, false, mGattCallback);
     }
 
-    public Set<BluetoothDevice> getConnectedDevices(){
+    public void closeGatt() {
+        if (mBluetoothGatt == null) {
+            return;
+        }
+        mBluetoothGatt.close();
+        mBluetoothGatt = null;
+    }
+
+    public Set<BluetoothDevice> getConnectedDevices() {
         Set<BluetoothDevice> connectedDevices = new HashSet<>();
-        if (mBluetoothA2dp != null){
+        if (mBluetoothA2dp != null) {
             connectedDevices.addAll(mBluetoothA2dp.getConnectedDevices());
         }
-        if (mBluetoothHeadset!=null){
+        if (mBluetoothHeadset != null) {
             connectedDevices.addAll(mBluetoothHeadset.getConnectedDevices());
         }
-        if (mBluetoothHealth!=null){
+        if (mBluetoothHealth != null) {
             connectedDevices.addAll(mBluetoothHealth.getConnectedDevices());
         }
         return connectedDevices;
     }
-
-    private final IBinder mBinder = new MyServiceBinder();
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -112,65 +103,66 @@ public class MyBluetoothService extends Service {
         return mBinder;
     }
 
-
     @Override
-    public void onCreate(){
+    public void onCreate() {
         super.onCreate();
 
-        Log.d(TAG,"service activated");
+        Log.d(TAG, "service activated");
         mMyBluetoothBackgroundReceiver = new MyBluetoothBackgroundReceiver();
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addCategory(BluetoothHeadset.VENDOR_SPECIFIC_HEADSET_EVENT_COMPANY_ID_CATEGORY+'.'+BluetoothAssignedNumbers.APPLE);
+        intentFilter.addCategory(BluetoothHeadset.VENDOR_SPECIFIC_HEADSET_EVENT_COMPANY_ID_CATEGORY + '.' + BluetoothAssignedNumbers.APPLE);
         intentFilter.addCategory(Intent.CATEGORY_DEFAULT);
         intentFilter.addAction(BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED);
         intentFilter.addAction(BluetoothHeadset.ACTION_VENDOR_SPECIFIC_HEADSET_EVENT);
-        registerReceiver(mMyBluetoothBackgroundReceiver,intentFilter);
+        registerReceiver(mMyBluetoothBackgroundReceiver, intentFilter);
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         mProfileListener = new BluetoothProfile.ServiceListener() {
             @Override
             public void onServiceConnected(int profile, BluetoothProfile proxy) {
-                if (profile == BluetoothProfile.HEADSET){
-                    mBluetoothHeadset=(BluetoothHeadset)proxy;
-                }
-                else if (profile == BluetoothProfile.A2DP){
-                    mBluetoothA2dp=(BluetoothA2dp)proxy;
-                }
-                else if (profile == BluetoothProfile.HEALTH){
-                    mBluetoothHealth=(BluetoothHealth)proxy;
+                if (profile == BluetoothProfile.HEADSET) {
+                    mBluetoothHeadset = (BluetoothHeadset) proxy;
+                } else if (profile == BluetoothProfile.A2DP) {
+                    mBluetoothA2dp = (BluetoothA2dp) proxy;
+                } else if (profile == BluetoothProfile.HEALTH) {
+                    mBluetoothHealth = (BluetoothHealth) proxy;
                 }
             }
 
             @Override
             public void onServiceDisconnected(int profile) {
-                if (profile == BluetoothProfile.HEADSET){
-                    mBluetoothHeadset=null;
-                }
-                else if (profile == BluetoothProfile.A2DP){
-                    mBluetoothA2dp=null;
-                }
-                else if (profile == BluetoothProfile.HEALTH){
-                    mBluetoothHealth=null;
+                if (profile == BluetoothProfile.HEADSET) {
+                    mBluetoothHeadset = null;
+                } else if (profile == BluetoothProfile.A2DP) {
+                    mBluetoothA2dp = null;
+                } else if (profile == BluetoothProfile.HEALTH) {
+                    mBluetoothHealth = null;
                 }
             }
         };
 
 
-        if (!mBluetoothAdapter.getProfileProxy(this,mProfileListener,BluetoothProfile.HEADSET)){
-            Log.d(TAG,"bluetooth health profile not available");
+        if (!mBluetoothAdapter.getProfileProxy(this, mProfileListener, BluetoothProfile.HEADSET)) {
+            Log.d(TAG, "bluetooth health profile not available");
         }
     }
 
     @Override
-    public int onStartCommand(Intent intent,int flags, int startId){
-        Log.d(TAG,"service onstart");
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d(TAG, "service onstart");
         return START_NOT_STICKY;
     }
 
     @Override
-    public void onDestroy(){
+    public void onDestroy() {
         unregisterReceiver(mMyBluetoothBackgroundReceiver);
-        Log.d(TAG,"service done");
+        Log.d(TAG, "service done");
         super.onDestroy();
+    }
+
+    public class MyServiceBinder extends Binder {
+        MyBluetoothService getService() {
+            return MyBluetoothService.this;
+        }
     }
 }

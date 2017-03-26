@@ -63,7 +63,7 @@ public class AboutFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_about, container, false);
-        webView = (WebView)view.findViewById(R.id.about_web);
+        webView = (WebView) view.findViewById(R.id.about_web);
         webView.loadUrl(ABOUT_URL);
         return view;
     }

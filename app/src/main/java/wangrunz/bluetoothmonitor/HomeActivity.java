@@ -17,23 +17,18 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.util.Log;
-import android.view.View;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.CompoundButton;
-import android.widget.Switch;
+import android.view.View;
 import android.widget.Toast;
 
 import java.util.Set;
@@ -41,21 +36,17 @@ import java.util.Set;
 public class HomeActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    //fragment tags
-    private static int navItemIndex =0;
     private static final String TAG_HOME = "home";
     private static final String TAG_ABOUT = "about";
     private static final String TAG_FEEDBACK = "feedback";
-    public static String CURRENT_TAG = TAG_HOME;
-
-    //
-
-
-
     private static final int REQUEST_ENABLE_BT = 1;
     private static final int PERMISSION_REQUEST_CODE = 100;
-    private static final long SCAN_PERIOD = 15000;
 
+    //
+    private static final long SCAN_PERIOD = 15000;
+    public static String CURRENT_TAG = TAG_HOME;
+    //fragment tags
+    private static int navItemIndex = 0;
     private FloatingActionButton fab;
 
     private BluetoothAdapter mBluetoothAdapter;
@@ -67,7 +58,37 @@ public class HomeActivity extends AppCompatActivity
     private Handler mHandler;
     private BluetoothLeScanner mBluetoothLeScanner;
     private boolean mBluetoothStatus;
+    private ScanCallback mLeScanCallback = new ScanCallback() {
+        @Override
+        public void onScanResult(int callbackType, ScanResult result) {
+            super.onScanResult(callbackType, result);
+            BluetoothDevice device = result.getDevice();
+            addToRecycler(device);
+            if (device.getName() == null) {
+                Log.d("LE device", "Unknown");
+            } else {
+                Log.d("LE device", device.getName());
+            }
+            Log.d("LE address", device.getAddress());
+        }
 
+        @Override
+        public void onScanFailed(int errorCode) {
+            super.onScanFailed(errorCode);
+            Log.d("LESCANNER", "fail:" + errorCode);
+        }
+    };
+    private ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            myBluetoothService = ((MyBluetoothService.MyServiceBinder) service).getService();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            myBluetoothService = null;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,7 +117,7 @@ public class HomeActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        if (savedInstanceState == null){
+        if (savedInstanceState == null) {
             navItemIndex = 0;
             CURRENT_TAG = TAG_HOME;
             loadFragment();
@@ -111,24 +132,20 @@ public class HomeActivity extends AppCompatActivity
             @Override
             public void onReceive(Context context, Intent intent) {
                 String action = intent.getAction();
-                if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)){
-                    Toast.makeText(context,"Scan started",Toast.LENGTH_SHORT).show();
+                if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)) {
+                    Toast.makeText(context, "Scan started", Toast.LENGTH_SHORT).show();
                     setFabStatus(false);
-                }
-                else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)){
+                } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                     setFabStatus(true);
-                    Toast.makeText(context,"Scan finished",Toast.LENGTH_SHORT).show();
-                }
-                else if (BluetoothDevice.ACTION_FOUND.equals(action)){
+                    Toast.makeText(context, "Scan finished", Toast.LENGTH_SHORT).show();
+                } else if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     addToRecycler(device);
-                }
-                else if (action.equals(BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED)){
+                } else if (action.equals(BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED)) {
                     refresh();
-                }
-                else if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)){
-                    int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,BluetoothAdapter.ERROR);
-                    switch (state){
+                } else if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                    int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+                    switch (state) {
                         case BluetoothAdapter.STATE_OFF:
 
                             toggleBluetooth(false);
@@ -147,63 +164,60 @@ public class HomeActivity extends AppCompatActivity
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
         filter.addAction(BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED);
-        registerReceiver(mDiscoveryReceiver,filter);
+        registerReceiver(mDiscoveryReceiver, filter);
 
-        if (mBluetoothAdapter == null){
+        if (mBluetoothAdapter == null) {
             //Device does not support Bluetooth
-            Toast.makeText(this,R.string.bluetooth_not_support,Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.bluetooth_not_support, Toast.LENGTH_SHORT).show();
             toggleBluetooth(false);
-        }
-        else{
-            if (mBluetoothAdapter.isEnabled()){
+        } else {
+            if (mBluetoothAdapter.isEnabled()) {
                 toggleBluetooth(true);
-            }
-            else {
+            } else {
                 toggleBluetooth(false);
             }
         }
 
-        startService(new Intent(this,MyBluetoothService.class));
+        startService(new Intent(this, MyBluetoothService.class));
         doBindService();
     }
 
     private void loadFragment() {
-        if (getSupportFragmentManager().findFragmentByTag(CURRENT_TAG)!=null){
+        if (getSupportFragmentManager().findFragmentByTag(CURRENT_TAG) != null) {
             return;
         }
 
-        Runnable mPendingRunnable = new Runnable(){
+        Runnable mPendingRunnable = new Runnable() {
             @Override
-            public void run(){
+            public void run() {
                 Fragment fragment = getFragment();
                 FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
                 fragmentTransaction.setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out);
-                fragmentTransaction.replace(R.id.content_home,fragment,CURRENT_TAG);
+                fragmentTransaction.replace(R.id.content_home, fragment, CURRENT_TAG);
                 fragmentTransaction.commitNowAllowingStateLoss();
             }
         };
 
-        if (mPendingRunnable != null){
+        if (mPendingRunnable != null) {
             mHandler.post(mPendingRunnable);
         }
         toggleFab();
     }
 
     private void toggleFab() {
-        if (CURRENT_TAG!=TAG_HOME){
+        if (CURRENT_TAG != TAG_HOME) {
             fab.hide();
-        }
-        else {
+        } else {
             fab.show();
         }
     }
 
     private Fragment getFragment() {
-        if (CURRENT_TAG!=TAG_HOME){
+        if (CURRENT_TAG != TAG_HOME) {
             scanLeDevice(false);
             mBluetoothAdapter.cancelDiscovery();
         }
-        switch (CURRENT_TAG){
+        switch (CURRENT_TAG) {
             case TAG_HOME:
                 return new HomeFragment();
             case TAG_ABOUT:
@@ -221,8 +235,8 @@ public class HomeActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            if (CURRENT_TAG!=TAG_HOME){
-                CURRENT_TAG=TAG_HOME;
+            if (CURRENT_TAG != TAG_HOME) {
+                CURRENT_TAG = TAG_HOME;
                 loadFragment();
                 return;
             }
@@ -234,10 +248,9 @@ public class HomeActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.home, menu);
-        if (mBluetoothStatus){
+        if (mBluetoothStatus) {
             menu.findItem(R.id.action_settings).setTitle(R.string.bluetooth_on);
-        }
-        else {
+        } else {
             menu.findItem(R.id.action_settings).setTitle(R.string.bluetooth_off);
         }
         return true;
@@ -274,7 +287,7 @@ public class HomeActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_home){
+        if (id == R.id.nav_home) {
             CURRENT_TAG = TAG_HOME;
         } else if (id == R.id.nav_send) {
             CURRENT_TAG = TAG_FEEDBACK;
@@ -288,110 +301,76 @@ public class HomeActivity extends AppCompatActivity
         return true;
     }
 
-    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         //Request enable bluetooth
-        if (requestCode == REQUEST_ENABLE_BT){
+        if (requestCode == REQUEST_ENABLE_BT) {
             // Check if it was failed
             if (resultCode == RESULT_CANCELED) {
-                Toast.makeText(this,"Fail to enable bluetooth",Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Fail to enable bluetooth", Toast.LENGTH_SHORT).show();
                 toggleBluetooth(false);
             }
         }
     }
 
-    private void refresh(){
-        if (mBluetoothAdapter.isEnabled()){
+    private void refresh() {
+        if (mBluetoothAdapter.isEnabled()) {
             myBluetoothService.closeGatt();
             clearRecycler();
             Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-            for (BluetoothDevice device:pairedDevices){
+            for (BluetoothDevice device : pairedDevices) {
                 addToRecycler(device);
-                if (device.getType()==BluetoothDevice.DEVICE_TYPE_LE || device.getType()==BluetoothDevice.DEVICE_TYPE_DUAL){
-                    myBluetoothService.connectGatt(this,device);
+                if (device.getType() == BluetoothDevice.DEVICE_TYPE_LE || device.getType() == BluetoothDevice.DEVICE_TYPE_DUAL) {
+                    myBluetoothService.connectGatt(this, device);
                 }
             }
 
             Set<BluetoothDevice> connectedDevices = myBluetoothService.getConnectedDevices();
             updateConnectedDeviceToRecycler(connectedDevices);
-            requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION,android.Manifest.permission.ACCESS_COARSE_LOCATION},PERMISSION_REQUEST_CODE);
+            requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST_CODE);
         }
     }
 
-    private ScanCallback mLeScanCallback = new ScanCallback() {
-        @Override
-        public void onScanResult(int callbackType, ScanResult result){
-            super.onScanResult(callbackType,result);
-            BluetoothDevice device = result.getDevice();
-            addToRecycler(device);
-            if(device.getName() == null){
-                Log.d("LE device","Unknown");
-            }
-            else {
-                Log.d("LE device",device.getName());
-            }
-            Log.d("LE address",device.getAddress());
-        }
-        @Override
-        public void onScanFailed(int errorCode){
-            super.onScanFailed(errorCode);
-            Log.d("LESCANNER","fail:"+errorCode);
-        }
-    };
-
-    private void scanLeDevice(final boolean enable){
-        if (enable){
-            mHandler.postDelayed(new Runnable(){
+    private void scanLeDevice(final boolean enable) {
+        if (enable) {
+            mHandler.postDelayed(new Runnable() {
                 @Override
-                public void run(){
+                public void run() {
                     mBluetoothLeScanner.stopScan(mLeScanCallback);
-                    Log.d("LESCANNER","stop");
+                    Log.d("LESCANNER", "stop");
                 }
-            },SCAN_PERIOD);
+            }, SCAN_PERIOD);
 
             mBluetoothLeScanner.startScan(mLeScanCallback);
-        }
-        else {
+        } else {
             mBluetoothLeScanner.stopScan(mLeScanCallback);
-            Log.d("LESCANNER","stop");
+            Log.d("LESCANNER", "stop");
         }
     }
 
-    private ServiceConnection mConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            myBluetoothService = ((MyBluetoothService.MyServiceBinder)service).getService();
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            myBluetoothService = null;
-        }
-    };
-
-    void doBindService(){
-        bindService(new Intent(this,MyBluetoothService.class),mConnection,Context.BIND_AUTO_CREATE);
+    void doBindService() {
+        bindService(new Intent(this, MyBluetoothService.class), mConnection, Context.BIND_AUTO_CREATE);
         mIsBound = true;
     }
 
-    void doUnbindService(){
-        if (mIsBound){
+    void doUnbindService() {
+        if (mIsBound) {
             unbindService(mConnection);
             mIsBound = false;
         }
     }
 
-    private void toggleBluetooth(boolean enable){
+    private void toggleBluetooth(boolean enable) {
         if (enable) {
             setFabStatus(true);
-            mBluetoothStatus=true;
+            mBluetoothStatus = true;
         } else {
             clearRecycler();
             setFabStatus(false);
-            mBluetoothStatus=false;
+            mBluetoothStatus = false;
         }
     }
 
-    private void setFabStatus(boolean status){
+    private void setFabStatus(boolean status) {
         if (status) {
             fab.setClickable(true);
             fab.setAlpha(1f);
@@ -401,46 +380,44 @@ public class HomeActivity extends AppCompatActivity
         }
     }
 
-    private void addToRecycler(BluetoothDevice device){
-        HomeFragment fragment = (HomeFragment)getSupportFragmentManager().findFragmentByTag(TAG_HOME);
-        if (fragment!=null){
+    private void addToRecycler(BluetoothDevice device) {
+        HomeFragment fragment = (HomeFragment) getSupportFragmentManager().findFragmentByTag(TAG_HOME);
+        if (fragment != null) {
             fragment.mRecyclerAdapter.addmBluetoothDevices(device);
         }
     }
 
-    private void clearRecycler(){
-        HomeFragment fragment = (HomeFragment)getSupportFragmentManager().findFragmentByTag(TAG_HOME);
-        if (fragment!=null){
+    private void clearRecycler() {
+        HomeFragment fragment = (HomeFragment) getSupportFragmentManager().findFragmentByTag(TAG_HOME);
+        if (fragment != null) {
             fragment.mRecyclerAdapter.clearmBluetoothDevices();
         }
     }
 
-    private void updateConnectedDeviceToRecycler(Set<BluetoothDevice> devices){
-        HomeFragment fragment = (HomeFragment)getSupportFragmentManager().findFragmentByTag(TAG_HOME);
-        if (fragment!=null){
+    private void updateConnectedDeviceToRecycler(Set<BluetoothDevice> devices) {
+        HomeFragment fragment = (HomeFragment) getSupportFragmentManager().findFragmentByTag(TAG_HOME);
+        if (fragment != null) {
             fragment.mRecyclerAdapter.updateConnectedDevice(devices);
         }
     }
 
 
-
     @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[],int[] grantResults){
-        switch (requestCode){
-            case PERMISSION_REQUEST_CODE:{
-                if (grantResults.length>0 && grantResults[0]== PackageManager.PERMISSION_GRANTED) {
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSION_REQUEST_CODE: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     scanLeDevice(true);
                     mBluetoothAdapter.startDiscovery();
-                }
-                else{
-                    Toast.makeText(this,"Location Permission is needed for scan!",Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "Location Permission is needed for scan!", Toast.LENGTH_SHORT).show();
                 }
             }
         }
     }
 
     @Override
-    public void onDestroy(){
+    public void onDestroy() {
         //stopService(new Intent(this,MyBluetoothService.class));
         unregisterReceiver(mDiscoveryReceiver);
         myBluetoothService.closeGatt();

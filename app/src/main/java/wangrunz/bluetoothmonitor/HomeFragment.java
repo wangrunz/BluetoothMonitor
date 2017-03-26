@@ -1,10 +1,8 @@
 package wangrunz.bluetoothmonitor;
 
-import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -25,15 +23,11 @@ public class HomeFragment extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
-
+    public MyRecyclerAdapter mRecyclerAdapter;
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
-
     private RecyclerView recyclerView;
-    public MyRecyclerAdapter mRecyclerAdapter;
-
-
     private OnFragmentInteractionListener mListener;
 
     private View rootView;
@@ -76,7 +70,7 @@ public class HomeFragment extends Fragment {
         // Inflate the layout for this fragment
         rootView = inflater.inflate(R.layout.fragment_home, container, false);
 
-        recyclerView = (RecyclerView)rootView.findViewById(R.id.recyclerView);
+        recyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         mRecyclerAdapter = new MyRecyclerAdapter();
         recyclerView.setAdapter(mRecyclerAdapter);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(rootView.getContext());
